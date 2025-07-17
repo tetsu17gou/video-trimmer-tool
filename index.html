@@ -1,0 +1,120 @@
+# GitHub デプロイメント構造
+
+## プロジェクト構造
+```
+video-trimmer/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── src/
+│   ├── index.html
+│   ├── styles.css
+│   └── script.js
+├── package.json
+├── README.md
+└── .gitignore
+```
+
+## 1. package.json の作成
+```json
+{
+  "name": "video-trimmer-tool",
+  "version": "1.0.0",
+  "description": "Web-based video trimming tool",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "serve src",
+    "build": "echo 'No build step needed for static site'",
+    "deploy": "gh-pages -d src"
+  },
+  "keywords": ["video", "trimming", "web-app"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.0.0",
+    "gh-pages": "^4.0.0"
+  }
+}
+```
+
+## 2. GitHub Actions ワークフロー (.github/workflows/deploy.yml)
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./src
+```
+
+## 3. ファイル分割版
+
+### src/index.html
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画切り出しツール</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 動画切り出しツール</h1>
+        
+        <div class="info">
+            <p>📌 このツールは完全にブラウザ上で動作します。動画ファイルはサーバーに送信されません。</p>
+            <p>🎯 MP4, WebM, MOV形式の動画をサポートしています。</p>
+        </div>
+
+        <div class="upload-section">
+            <p style="margin-bottom: 15px; color: #666;">動画ファイルを選択してください</p>
+            <input type="file" id="videoFile" class="file-input" accept="video/*">
+            <button class="upload-button" onclick="document.getElementById('videoFile').click()">
+                📁 ファイルを選択
+            </button>
+        </div>
+
+        <div class="video-section" id="videoSection">
+            <div class="video-container">
+                <video id="videoPlayer" controls></video>
+            </div>
+
+            <div class="controls">
+                <div class="time-inputs">
+                    <div class="time-group">
+                        <label for="startTime">開始時間 (秒)</label>
+                        <input type="number" id="startTime" min="0" step="0.1" value="0">
+                    </div>
+                    <div class="time-group">
+                        <label for="endTime">終了時間 (秒)</label>
+                        <input type="number" id="endTime" min="0" step="0.1" value="10">
+                    </div>
+                </div>
+
+                <div class="range-container">
+                    <label>
